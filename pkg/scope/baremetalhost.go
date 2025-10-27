@@ -36,20 +36,21 @@ import (
 
 // BareMetalHostScopeParams defines the input parameters used to create a new scope.
 type BareMetalHostScopeParams struct {
-	Client                  client.Client
-	Logger                  logr.Logger
-	HetznerBareMetalHost    *infrav1.HetznerBareMetalHost
-	HetznerBareMetalMachine *infrav1.HetznerBareMetalMachine
-	HetznerCluster          *infrav1.HetznerCluster
-	Cluster                 *clusterv1.Cluster
-	RobotClient             robotclient.Client
-	SSHClientFactory        sshclient.Factory
-	OSSSHSecret             *corev1.Secret
-	RescueSSHSecret         *corev1.Secret
-	SecretManager           *secretutil.SecretManager
-	PreProvisionCommand     string
-	ImageURLCommand         string
-	SSHAfterInstallImage    bool
+	Client                            client.Client
+	Logger                            logr.Logger
+	HetznerBareMetalHost              *infrav1.HetznerBareMetalHost
+	HetznerBareMetalMachine           *infrav1.HetznerBareMetalMachine
+	HetznerCluster                    *infrav1.HetznerCluster
+	Cluster                           *clusterv1.Cluster
+	RobotClient                       robotclient.Client
+	SSHClientFactory                  sshclient.Factory
+	OSSSHSecret                       *corev1.Secret
+	RescueSSHSecret                   *corev1.Secret
+	SecretManager                     *secretutil.SecretManager
+	PreProvisionCommand               string
+	ImageURLCommand                   string
+	SSHAfterInstallImage              bool
+	TalosApplyConfigAfterInstallImage bool
 }
 
 // NewBareMetalHostScope creates a new Scope from the supplied parameters.
@@ -83,19 +84,20 @@ func NewBareMetalHostScope(params BareMetalHostScopeParams) (*BareMetalHostScope
 	}
 
 	return &BareMetalHostScope{
-		Logger:                  params.Logger,
-		Client:                  params.Client,
-		RobotClient:             params.RobotClient,
-		SSHClientFactory:        params.SSHClientFactory,
-		HetznerCluster:          params.HetznerCluster,
-		Cluster:                 params.Cluster,
-		HetznerBareMetalHost:    params.HetznerBareMetalHost,
-		HetznerBareMetalMachine: params.HetznerBareMetalMachine,
-		OSSSHSecret:             params.OSSSHSecret,
-		RescueSSHSecret:         params.RescueSSHSecret,
-		SecretManager:           params.SecretManager,
-		PreProvisionCommand:     params.PreProvisionCommand,
-		SSHAfterInstallImage:    params.SSHAfterInstallImage,
+		Logger:                            params.Logger,
+		Client:                            params.Client,
+		RobotClient:                       params.RobotClient,
+		SSHClientFactory:                  params.SSHClientFactory,
+		HetznerCluster:                    params.HetznerCluster,
+		Cluster:                           params.Cluster,
+		HetznerBareMetalHost:              params.HetznerBareMetalHost,
+		HetznerBareMetalMachine:           params.HetznerBareMetalMachine,
+		OSSSHSecret:                       params.OSSSHSecret,
+		RescueSSHSecret:                   params.RescueSSHSecret,
+		SecretManager:                     params.SecretManager,
+		PreProvisionCommand:               params.PreProvisionCommand,
+		SSHAfterInstallImage:              params.SSHAfterInstallImage,
+		TalosApplyConfigAfterInstallImage: params.TalosApplyConfigAfterInstallImage,
 		WorkloadClusterClientFactory: &realWorkloadClusterClientFactory{
 			logger:         params.Logger,
 			client:         params.Client,
@@ -109,20 +111,21 @@ func NewBareMetalHostScope(params BareMetalHostScopeParams) (*BareMetalHostScope
 // BareMetalHostScope defines the basic context for an actuator to operate upon.
 type BareMetalHostScope struct {
 	logr.Logger
-	Client                       client.Client
-	SecretManager                *secretutil.SecretManager
-	RobotClient                  robotclient.Client
-	SSHClientFactory             sshclient.Factory
-	HetznerBareMetalHost         *infrav1.HetznerBareMetalHost
-	HetznerBareMetalMachine      *infrav1.HetznerBareMetalMachine
-	HetznerCluster               *infrav1.HetznerCluster
-	Cluster                      *clusterv1.Cluster
-	OSSSHSecret                  *corev1.Secret
-	RescueSSHSecret              *corev1.Secret
-	PreProvisionCommand          string
-	SSHAfterInstallImage         bool
-	WorkloadClusterClientFactory WorkloadClusterClientFactory
-	ImageURLCommand              string
+	Client                            client.Client
+	SecretManager                     *secretutil.SecretManager
+	RobotClient                       robotclient.Client
+	SSHClientFactory                  sshclient.Factory
+	HetznerBareMetalHost              *infrav1.HetznerBareMetalHost
+	HetznerBareMetalMachine           *infrav1.HetznerBareMetalMachine
+	HetznerCluster                    *infrav1.HetznerCluster
+	Cluster                           *clusterv1.Cluster
+	OSSSHSecret                       *corev1.Secret
+	RescueSSHSecret                   *corev1.Secret
+	PreProvisionCommand               string
+	SSHAfterInstallImage              bool
+	TalosApplyConfigAfterInstallImage bool
+	WorkloadClusterClientFactory      WorkloadClusterClientFactory
+	ImageURLCommand                   string
 }
 
 // Name returns the HetznerCluster name.

@@ -19,6 +19,7 @@ package host
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -49,6 +50,9 @@ import (
 	"github.com/syself/cluster-api-provider-hetzner/pkg/scope"
 	sshclient "github.com/syself/cluster-api-provider-hetzner/pkg/services/baremetal/client/ssh"
 	"github.com/syself/cluster-api-provider-hetzner/pkg/utils"
+
+	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
+	talosclient "github.com/siderolabs/talos/pkg/machinery/client"
 )
 
 const (
@@ -1728,6 +1732,40 @@ func (s *Service) actionEnsureProvisioned(ctx context.Context) (ar actionResult)
 		// Command line argument `--baremetal-ssh-after-install-image=false` was used.
 		// This mean we do not connect via ssh to the machine after the image got installed.
 		record.Event(s.scope.HetznerBareMetalHost, "ServerProvisioned", "server successfully provisioned ('ensure-provisioned' was skipped)")
+		conditions.MarkTrue(s.scope.HetznerBareMetalHost, infrav1.ProvisionSucceededCondition)
+		s.scope.HetznerBareMetalHost.ClearError()
+		return actionComplete{}
+	}
+
+	if s.scope.TalosApplyConfigAfterInstallImage {
+		data, err := s.scope.GetRawBootstrapData(ctx)
+		if err != nil {
+			return actionError{err: fmt.Errorf("baremetal GetRawBootstrapData failed: %w", err)}
+		}
+
+		talosClient, err := talosclient.New(ctx,
+			talosclient.WithEndpoints(s.scope.HetznerBareMetalHost.Spec.Status.GetIPAddress()),
+			talosclient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true}),
+		)
+		if err != nil {
+			return actionError{err: fmt.Errorf("baremetal NewTalosClient failed: %w", err)}
+		}
+
+		resp, err := talosClient.ApplyConfiguration(ctx, &machineapi.ApplyConfigurationRequest{
+			Data: data,
+		})
+		if err != nil {
+			return actionError{err: fmt.Errorf("baremetal ApplyConfiguration failed: %w", err)}
+		}
+
+		for _, message := range resp.GetMessages() {
+			for _, warning := range message.GetWarnings() {
+				record.Warnf(s.scope.HetznerBareMetalHost, "UnexpectedTalosApplyConfigWarning",
+					"TalosApplyConfigWarning: %s", warning)
+			}
+		}
+
+		record.Event(s.scope.HetznerBareMetalHost, "ServerProvisioned", "server successfully provisioned")
 		conditions.MarkTrue(s.scope.HetznerBareMetalHost, infrav1.ProvisionSucceededCondition)
 		s.scope.HetznerBareMetalHost.ClearError()
 		return actionComplete{}

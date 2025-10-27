@@ -55,14 +55,15 @@ import (
 // HetznerBareMetalHostReconciler reconciles a HetznerBareMetalHost object.
 type HetznerBareMetalHostReconciler struct {
 	client.Client
-	RateLimitWaitTime    time.Duration
-	APIReader            client.Reader
-	RobotClientFactory   robotclient.Factory
-	SSHClientFactory     sshclient.Factory
-	WatchFilterValue     string
-	PreProvisionCommand  string
-	SSHAfterInstallImage bool
-	ImageURLCommand      string
+	RateLimitWaitTime                 time.Duration
+	APIReader                         client.Reader
+	RobotClientFactory                robotclient.Factory
+	SSHClientFactory                  sshclient.Factory
+	WatchFilterValue                  string
+	PreProvisionCommand               string
+	SSHAfterInstallImage              bool
+	TalosApplyConfigAfterInstallImage bool
+	ImageURLCommand                   string
 }
 
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=hetznerbaremetalhosts,verbs=get;list;watch;create;update;patch;delete
@@ -247,20 +248,21 @@ func (r *HetznerBareMetalHostReconciler) Reconcile(ctx context.Context, req ctrl
 
 	// Create the scope.
 	hostScope, err := scope.NewBareMetalHostScope(scope.BareMetalHostScopeParams{
-		Logger:                  log,
-		Client:                  r.Client,
-		HetznerCluster:          hetznerCluster,
-		Cluster:                 cluster,
-		HetznerBareMetalHost:    bmHost,
-		HetznerBareMetalMachine: hetznerBareMetalMachine,
-		RobotClient:             r.RobotClientFactory.NewClient(robotCreds),
-		SSHClientFactory:        r.SSHClientFactory,
-		OSSSHSecret:             osSSHSecret,
-		RescueSSHSecret:         rescueSSHSecret,
-		SecretManager:           secretManager,
-		PreProvisionCommand:     r.PreProvisionCommand,
-		ImageURLCommand:         r.ImageURLCommand,
-		SSHAfterInstallImage:    r.SSHAfterInstallImage,
+		Logger:                            log,
+		Client:                            r.Client,
+		HetznerCluster:                    hetznerCluster,
+		Cluster:                           cluster,
+		HetznerBareMetalHost:              bmHost,
+		HetznerBareMetalMachine:           hetznerBareMetalMachine,
+		RobotClient:                       r.RobotClientFactory.NewClient(robotCreds),
+		SSHClientFactory:                  r.SSHClientFactory,
+		OSSSHSecret:                       osSSHSecret,
+		RescueSSHSecret:                   rescueSSHSecret,
+		SecretManager:                     secretManager,
+		PreProvisionCommand:               r.PreProvisionCommand,
+		ImageURLCommand:                   r.ImageURLCommand,
+		SSHAfterInstallImage:              r.SSHAfterInstallImage,
+		TalosApplyConfigAfterInstallImage: r.TalosApplyConfigAfterInstallImage,
 	})
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("failed to create scope: %w", err)
